@@ -52,7 +52,7 @@ cd "$INDIR"
   #  R2=${R1/_R1_/_R2_}
 
    # if [[ ! -f "$R2" ]]; then
-    #    echo "⚠️  No R2 found for $R1 — skipping."
+    #    echo "No R2 found for $R1 — skipping."
      #   continue
    # fi
 ########################
