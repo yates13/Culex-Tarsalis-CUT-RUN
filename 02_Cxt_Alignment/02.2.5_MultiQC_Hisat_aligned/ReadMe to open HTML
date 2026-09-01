@@ -1,0 +1,8 @@
+## Viewing HTML Reports (e.g. MultiQC/FastQC)
+
+GitHub won't display HTML files directly when clicked. To view one:
+
+1. Click on the `.html` file in the repo
+2. In the upper right corner, click **Raw**
+3. Download the page 
+4. Open the downloaded file in your browser
