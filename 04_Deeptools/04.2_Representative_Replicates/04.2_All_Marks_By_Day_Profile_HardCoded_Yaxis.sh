@@ -127,7 +127,7 @@ for TARGET in AC ME SR; do
             --plotWidth 12 \
             --dpi 300
 
-        echo "  ✔ Created: ${DAY_DIR}/${TARGET}_${DAY}_AllMarks.png"
+        echo "  Created: ${DAY_DIR}/${TARGET}_${DAY}_AllMarks.png"
     done
 done
 
