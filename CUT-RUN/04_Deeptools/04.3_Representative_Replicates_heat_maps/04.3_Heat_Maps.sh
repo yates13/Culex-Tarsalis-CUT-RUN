@@ -12,32 +12,101 @@
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=c832500103@colostate.edu
 
-# ============================================================
-# DEEPTOOLS PLOT HEATMAP - Culex tarsalis CUT&RUN
-# ONE HEATMAP PER TARGET x DAY, ONE REPRESENTATIVE REPLICATE
-# PER MARK (BF, MP, ZH, SF)
-# ============================================================
-# For every TARGET + DAY, picks the pre-defined representative
-# replicate for each mark, subsets the combined matrix to just
-# those 4 samples, and plots a heatmap with all 4 marks as
-# side-by-side panels.
+################################################################################
+# STEP 4.3: Heatmaps of all four groups together, one heatmap per target and day
+#           (representative replicates only)
 #
-# USAGE:
+# RUN THIS AFTER Step 4.1.2 has made matrix_combined_gene_only_bed_file.gz.
+#
+# USAGE (a title is required):
 #   sbatch 04.3_Heat_Maps.sh "Base Title"
-# ============================================================
+#   Each heatmap is titled "<Base Title> - <TARGET> <DAY>".
+#   The script exits immediately with an error if no title is given.
+#
+# INPUT:   matrix_combined_gene_only_bed_file.gz (from Step 4.1.2, in 04_Deeptools)
+#          BigWigs in 00_BigWig_Files_Individual_Bams (used only to look up the
+#            sample names, which must match the matrix sample labels)
+# OUTPUT:  6 heatmaps, one per TARGET (AC, ME, SR) x DAY (D1, D3):
+#            04.3_Representative_Replicates_heat_maps/Figures/All_Marks_By_Day_Heatmap/<DAY>/<TARGET>_<DAY>_AllMarks_heatmap.png
+#          6 subset matrices in 04_Deeptools:
+#            matrix_<TARGET>_<DAY>_AllMarks_Heatmap.gz
+# ENV:     deeptools_kernel_v2 (deepTools computeMatrixOperations, plotHeatmap)
+# RESOURCES: 8 CPUs, 64 GB, 4 h
+#
+# WHAT EACH HEATMAP SHOWS
+#   For one target and day, the representative replicate of each group
+#   (SF, BF, MP, ZH) is shown as its own side-by-side panel around the TSS,
+#   in that order. TARGET: AC = H3K27ac, ME = H3K9me, SR = SREBP.
+#
+# DIRECTORIES
+#   Run from 04_Deeptools/04.3_Representative_Replicates_heat_maps. Job logs go
+#   to out_log/ and err_log/ in the folder you submit from. Everything else uses
+#   full paths.
+#   DEEPTOOLS_DIR = <path>/04_Deeptools
+#   BW_DIR        = DEEPTOOLS_DIR/00_BigWig_Files_Individual_Bams
+#   MATRIX        = DEEPTOOLS_DIR/matrix_combined_gene_only_bed_file.gz
+#   OUTDIR        = DEEPTOOLS_DIR/04.3_Representative_Replicates_heat_maps/Figures/All_Marks_By_Day_Heatmap
+#                   (created automatically, with D1/ and D3/ subfolders)
+#
+# BEFORE SUBMITTING (run from 04.3_Representative_Replicates_heat_maps)
+#   1. mkdir -p out_log err_log
+#        (SLURM opens the log files before the script starts, so these folders
+#         must exist ahead of time or the job fails with no log.)
+#   2. Confirm Step 4.1.2 finished:
+#        ls -lh <DEEPTOOLS_DIR>/matrix_combined_gene_only_bed_file.gz
+#   3. sbatch 04.3_Heat_Maps.sh "Your Base Title"
+#
+# NOT AN ARRAY JOB
+#   There is no array size to change. One job loops over all target/day
+#   combinations.
+#
+# THINGS YOU MAY WANT TO EDIT
+#   REP_MAP     Which replicate represents each group/target/day, in the form
+#               [GROUP_TARGET_DAY]="R<n>". KEEP THIS IDENTICAL TO REP_MAP in
+#               04.2_All_Marks_By_Day_Profile_HardCoded_Yaxis.sh so the heatmaps
+#               and profile plots show the same samples. If you change one,
+#               change the other. A missing entry, or a replicate that isn't
+#               found, leaves that group off the heatmap (a message is printed).
+#   COLORMAP, Z_MIN, Z_MAX, REF_POINT_LABEL, WHAT_TO_SHOW   Heatmap appearance.
+#   Panel order  Set by the "for MARK in SF BF MP ZH" loop. Change the order there.
+#   Adding or removing a group: update REP_MAP and that loop.
+#   Adding a target or day: update the "for TARGET" / "for DAY" loops and give
+#               REP_MAP entries for the new combinations.
+#
+# CHECKING THE RESULTS
+#   ls <OUTDIR>/D1 <OUTDIR>/D3          # 3 heatmaps in each folder
+#   grep "skipping" out_log/*.log       # groups or plots that were left out
+#   grep "using" out_log/*.log          # which sample was chosen for each group
+#   The job exits with an error at the end if any target/day was skipped or failed.
+#
+# NOTES
+#   - The script stops on any error (set -e), for example if plotHeatmap fails.
+#   - Sample names look like <GROUP>-<TARGET>-<DAY>-R<n>; replicates are matched
+#     by the R<n> part ("R1", "R2", ...), not "Rep1".
+#   - Paths to check before running: SCRATCH, DEEPTOOLS_DIR, and the email above.
+################################################################################
 
 set -e
 
+# ----------------------------
+# Environment setup
+# ----------------------------
 SCRATCH=/scratch/alpine/c832500103@colostate.edu
 source ${SCRATCH}/miniconda3/etc/profile.d/conda.sh
 conda activate ${SCRATCH}/conda_envs/deeptools_kernel_v2
 
+# ----------------------------
+# Input/output paths
+# ----------------------------
 DEEPTOOLS_DIR="${SCRATCH}/Cxt_Cut_Run_Pipeline/Round1_Round2_With_Duplicates/04_Deeptools"
 BW_DIR="${DEEPTOOLS_DIR}/00_BigWig_Files_Individual_Bams"
 MATRIX="${DEEPTOOLS_DIR}/matrix_combined_gene_only_bed_file.gz"
 OUTDIR="${DEEPTOOLS_DIR}/04.3_Representative_Replicates_heat_maps/Figures/All_Marks_By_Day_Heatmap"
 mkdir -p "$OUTDIR" out_log err_log
 
+# ----------------------------
+# Checks: tools, input matrix, title argument
+# ----------------------------
 if ! command -v plotHeatmap &> /dev/null; then
     echo "ERROR: plotHeatmap not found. Install with: conda install deeptools"
     exit 1
@@ -64,7 +133,6 @@ BASE_TITLE=$1
 # ============================================================
 # HEATMAP SETTINGS
 # ============================================================
-
 COLORMAP="RdBu"
 Z_MIN="auto"
 Z_MAX="auto"
@@ -87,7 +155,6 @@ declare -A REP_MAP=(
 # For every TARGET + DAY, gather one representative sample per
 # MARK and plot all four marks as panels in a single heatmap
 # ============================================================
-
 FAILED=0
 
 for TARGET in AC ME SR; do

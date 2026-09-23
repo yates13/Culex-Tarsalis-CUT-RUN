@@ -11,26 +11,62 @@
 #SBATCH --mail-type=ALL
 #SBATCH --output=%x.%A_%a.log
 #SBATCH --error=%x.%A_%a.err
-#SBATCH --array=1-32
+#SBATCH --array=1-32		 # MUST equal the number of CONDITIONS in conditions.txt (not samples)
 
+################################################################################
+# STEP 2.4: Merge replicate BAMs for each condition (one condition per array task)
 #
-# ARRAY VERSION - one array task per condition, run in parallel instead of
-# looping through conditions serially.
+# INPUT:   <condition>-R<n>-Cxt.bam files from Step 2.3 (02.3_Cxt_BamConverted)
+#            e.g. <condition>-R1-Cxt.bam, <condition>-R2-Cxt.bam
+#          conditions.txt = one condition name per line (built below)
+# OUTPUT:  in 02.4_Cxt_BamMerged_with_replicate_count, per condition:
+#            <condition>-rep<digits>-merged-sorted.bam (+ .bai index)
+#            The rep tag lists which replicates went in: rep123 = R1, R2, R3;
+#            rep12 = R1 and R2 only.
+#            <condition>-rep<digits>-merged.bam (unsorted intermediate, safe to delete)
+# ENV:     rnaPseudo_clean (samtools)
+# RESOURCES per task: 8 CPUs, 16 GB, 4 h
+# If a condition has only one replicate, its BAM is copied instead of merged.
 #
-# SLURM needs the array size (number of conditions) at SUBMIT time, before
-# this script ever runs, so this can't discover conditions and set its own
-# --array range internally. Two-step process:
+# BEFORE SUBMITTING
+#   SLURM needs the array size at submit time, so this script can't set its own
+#   range. Two steps:
 #
-#   1) Generate the conditions list first:
-#        bamdir=/path/to/02.3_Cxt_BamConverted
-#        mergedir=/path/to/02.4_Cxt_BamMerged_with_replicate_count
+#   1. Build the conditions list (one line per condition, replicate suffix removed):
+#        bamdir=<path>/02.3_Cxt_BamConverted
+#        mergedir=<path>/02.4_Cxt_BamMerged_with_replicate_count
 #        mkdir -p $mergedir
 #        ls ${bamdir}/*.bam | xargs -n1 basename | sed 's/-R[0-9]-Cxt\.bam//' \
 #            | sort -u > ${mergedir}/conditions.txt
 #
-#   2) Submit with the array range set from that file's line count:
+#   2. Submit with the array size taken from that file:
 #        sbatch --array=1-$(wc -l < ${mergedir}/conditions.txt) \
 #            02.4_BamMerge_With_replicate_counts_array.sh
+#
+# CHANGING THE ARRAY SIZE
+#   The array size is the number of CONDITIONS, not the number of samples.
+#   With 96 BAMs at 3 replicates each, that is 32. Task N merges line N of
+#   conditions.txt (counting from 1).
+#     - Array smaller than the list: extra conditions are silently skipped.
+#     - Array larger than the list: extra tasks fail with
+#       "no condition found for array index N".
+#   Using the wc -l form above avoids editing the "#SBATCH --array" line.
+#   Other useful forms:
+#        sbatch --array=1-32%10 script.sh   # at most 10 tasks at once
+#        sbatch --array=5,17 script.sh      # rerun only tasks 5 and 17
+#
+# CHECKING THE RESULTS
+#   ls <mergedir>/*-merged-sorted.bam | wc -l    # should equal the number of conditions
+#   Each task's log ends with a line like:
+#     "Condition X: 3 replicate(s) (rep123) were merged."
+#
+# NOTES
+#   - Requires BAM names to follow <condition>-R<n>-Cxt.bam. Other names break the
+#     conditions list and the replicate detection.
+#   - Logs are written to the folder you submit from, one .log and .err per task.
+#   - Paths to check before running: SCRATCH, bamdir, mergedir, and the email above.
+#   - The script stops on any error (set -euo pipefail).
+################################################################################
 
 set -euo pipefail
 
