@@ -52,10 +52,16 @@ conda activate ${SCRATCH}/conda_envs/<env_name>
 2. Submit each step with `sbatch <script>.sh` and check outputs before moving on.
 3. See the `How_to_make_*` files in each folder for building sample and treatment lists.
 
+## Reference genome
+
+- **Assembly:** *Culex tarsalis* CtarK1 [add source/citation]
+- **Annotation:** `Culex-tarsalis_knwr_BASEFEATURES_CtarK1.gff3`
+- **Derived files:** `genes_only.gff3`, `CtarK1_TSS.bed`, and `Culex-tarsalis_knwr_CtarK1.bed`, built with the steps in `Bed_file_instructions.txt` and `Gene_only_bed_instructions.txt`
+- The HISAT2 index is built in step 2 (`02.1_runBuildCtark1Genome_apline.sh`)
+
 ## Data
 
-- **Reference genome:** [assembly and annotation]
-- **Raw data:** [location or accession]
+Raw sequencing reads are not included in this repository.
 
 ## Notes
 - Large outputs (BAMs, bigWigs, matrices, logs) are not tracked in this repo.
