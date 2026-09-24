@@ -1,0 +1,9 @@
+SCRATCH=/scratch/alpine/.colostate.edu/c832500103
+source ${SCRATCH}/miniconda3/etc/profile.d/conda.sh 
+conda activate ${SCRATCH}/conda_envs/rnaPseudo_clean 
+
+
+source /scratch/alpine/.colostate.edu/c832500103/miniconda3/etc/profile.d/conda.sh
+conda activate /scratch/alpine/.colostate.edu/c832500103/conda_envs/rnaPseudo_clean
+
+multiqc /scratch/alpine/.colostate.edu/c832500103/Cxt_Cut_Run_Pipeline/Round1_Round2_With_Duplicates/01_Cxt_FastP/01.1_Cxt_fastp_out/ -o /scratch/alpine/.colostate.edu/c832500103/Cxt_Cut_Run_Pipeline/Round1_Round2_With_Duplicates/01_Cxt_FastP/01.2_FastP_MultiQC/MultiQC_out/
