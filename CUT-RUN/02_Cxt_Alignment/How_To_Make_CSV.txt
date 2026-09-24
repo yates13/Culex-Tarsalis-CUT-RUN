@@ -1,0 +1,2 @@
+# Run this from the merged bam directory 
+{ echo "Population,Factor,Day,RepSet,bamReads,Peaks"; for f in *-rep*-merged-sorted.bam; do IFS='-' read -r pop factor day repset _ <<< "$f"; echo "${pop},${factor},${day},${repset},${f},"; done; } > CtarK1_Meta_File.csv
