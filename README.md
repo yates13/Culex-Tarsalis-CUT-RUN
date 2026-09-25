@@ -70,21 +70,13 @@ sbatch [options] script [args]   — submit a job
 ### Writing a Slurm job script
 
 - nano YourNewJob.sh
-
 - Header (don't put any code above this):
-
 - #!/bin/bash
-
 - #SBATCH --partition=acpu
-
 - #SBATCH --qos=cpu-normal
-
 - #SBATCH --job-name=YourJobNameHere
-
 - #SBATCH --output=%x.%j.out
-
 - #SBATCH --nodes=1
-
 - #SBATCH --ntasks=1
 
 ## Reference genome
