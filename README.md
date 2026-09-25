@@ -62,26 +62,23 @@ Common commands: sbatch, srun, scancel, sacct, squeue, sinfo
 ### Common Slurm commands
 
 sbatch [options] script [args]   — submit a job
-  e.g. sbatch 04_deeptools.sh path/to/bams/folder
-
-scancel 12345                    — cancel job 12345
-scancel {31415..31425}           — cancel a range of sequential job IDs
-
-squeue | grep <your_username>    — just yours
+-  e.g. sbatch 04_deeptools.sh path/to/bams/folder
+- scancel 12345                    — cancel job 12345
+- scancel {31415..31425}           — cancel a range of sequential job IDs
+- squeue | grep <your_username>    — just yours
 
 ### Writing a Slurm job script
 
-nano YourNewJob.sh
+- nano YourNewJob.sh
+- Header (don't put any code above this):
 
-Header (don't put any code above this):
-
-#!/bin/bash
-#SBATCH --partition=acpu
-#SBATCH --qos=cpu-normal
-#SBATCH --job-name=YourJobNameHere
-#SBATCH --output=%x.%j.out
-#SBATCH --nodes=1
-#SBATCH --ntasks=1
+- #!/bin/bash
+- #SBATCH --partition=acpu
+- #SBATCH --qos=cpu-normal
+- #SBATCH --job-name=YourJobNameHere
+- #SBATCH --output=%x.%j.out
+- #SBATCH --nodes=1
+- #SBATCH --ntasks=1
 
 ## Reference genome
 
