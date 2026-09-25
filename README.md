@@ -38,6 +38,9 @@ Each step activates its own conda environment from `${SCRATCH}/conda_envs/`.
 | `macs2_env` | Step 3, peak calling |
 | `deeptools_kernel_v2` | Step 4, see `How_to_make_deeptools_kernel_env.md` |
 
+<If .yml files exist for these in the repo (e.g. CondaEnvs/), create each with:>
+conda env create --file YourCondaEnv.yml --prefix ${SCRATCH}/conda_envs/<env_name>
+
 Scripts load conda like this. Set `SCRATCH` to your own scratch path first:
 
 ```bash
@@ -51,6 +54,34 @@ conda activate ${SCRATCH}/conda_envs/<env_name>
 1. Edit the paths at the top of each script to match your directory.
 2. Submit each step with `sbatch <script>.sh` and check outputs before moving on.
 3. See the `How_to_make_*` files in each folder for building sample and treatment lists.
+
+## How to use Slurm
+
+Common commands: sbatch, srun, scancel, sacct, squeue, sinfo
+
+### Common Slurm commands
+
+sbatch [options] script [args]   — submit a job
+  e.g. sbatch 04_deeptools.sh path/to/bams/folder
+
+scancel 12345                    — cancel job 12345
+scancel {31415..31425}           — cancel a range of sequential job IDs
+
+squeue | grep <your_username>    — just yours
+
+### Writing a Slurm job script
+
+nano YourNewJob.sh
+
+Header (don't put any code above this):
+
+#!/bin/bash
+#SBATCH --partition=acpu
+#SBATCH --qos=cpu-normal
+#SBATCH --job-name=YourJobNameHere
+#SBATCH --output=%x.%j.out
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
 
 ## Reference genome
 
